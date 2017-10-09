@@ -1,0 +1,112 @@
+# scope: python
+
+# common header for odoo model files
+snippet oheader
+	# -*- coding: utf-8 -*-
+	import sys
+	import logging
+	
+	import odoo
+	from odoo import api, fields, models, tools, SUPERUSER_ID, _
+	from odoo.exceptions import UserError
+	from odoo.modules import get_module_resource
+	from odoo.osv import expression
+	from odoo.models import NewId
+	from odoo.tools.safe_eval import safe_eval
+
+	$1
+
+snippet nameget
+	@api.multi
+	def name_get(self):
+	""" Computes textual representation of records displayed in many2one
+	:return: list of pairs ``(id, text_repr)`` for each records
+	:rtype: list(tuple)
+	"""
+	result = []
+	for record in self:
+		# TODO: customize next line
+		result.append((record.id, "%s" % (record.name)))
+	return result
+
+snippet namesearch
+	@api.model
+	def name_search(self, name='', args=None, operator='ilike', limit=100):
+		"""Overriden to optionally restrict budgets search to those linked to the bank account
+		defined by the  'filter_budget_id_on_bank_account_id' context key.
+		"""
+		if 'filter_budget_id_on_bank_account_id' in self.env.context:
+			bank_account = self.env['xy.bank_account'].browse(self.env.context['filter_budget_id_on_bank_account_id'])
+			args += [('user_account_id','=',bank_account.user_account_id.id)]
+		return super(XyBudget, self).name_search(name, args, operator, limit)
+
+snippet computefield
+	@api.multi
+	@api.depends('${1:depends_on_field_name}')
+	def _calc_${1:computed_value_or_field_name}(self):
+		for record in self:
+			record.${1:computed_value_or_field_name} = ...
+
+snippet defaultget
+	@api.model
+	def default_get(self, fields):
+		res = super(${1:replace_with_current_class}, self).default_get(fields)
+		# update res for fields defined in `fields` param
+		return res
+
+snippet pyactwindow_tree
+	# Open a tree view filtered on some records
+	action_dict = {
+		'name': _("${1}"),
+		#'view_id' : Not used if view_mode is a list
+		'view_mode': 'tree,form',
+		'view_type': 'form',
+		'res_model': '${1}',  # eg. 'res.users',
+		'type': 'ir.actions.act_window',
+		'context': self.env.context,
+		'domain': [('id', 'in', self.env.context['active_ids'])]  # adjust or remove 
+	}
+	
+snippet pyactwindow_form
+	# Open a record in a form window
+	action_dict = {
+		'name': _("New budget"),
+		#'view_id' : Not used if view_mode is a list
+		'view_mode': 'form,tree',
+		'view_type': 'form',
+		'res_model': 'xy.budget',
+		'res_id': duplicated_budget_obj.id,
+		'type': 'ir.actions.act_window',
+	}
+	
+	# alternate example that open a form in a new window
+	#return {
+	#	'name': _("Expense breakdown"),
+	#	'view_type': 'form',
+	#	'view_mode': 'form',
+	#	'res_model': 'xy.banking_transaction_breakdown',
+	#	'view_id': self.env.ref('xy_core.xy_banking_transaction_breakdown__form_view').id,
+	#	'type': 'ir.actions.act_window',
+	#	'res_id': self.id,
+	#	'context': self.env.context,
+	#	'target': 'new'
+	#}
+	
+snippet modelreport
+
+	class ${1:ObjectName}Report(models.Model):
+		_name = '${2:pr.object_name}'
+		_description = '${3:Textual description Report - pr}'
+		_auto = False
+
+		name = fields.Char(readonly=True)
+		# Add other fields here
+
+		def init(self):
+	        """ Called by Odoo when Class _auto = False to setup the object in database
+	        :return:
+	        """
+	        tools.drop_view_if_exists(self.env.cr, self._table)
+	        self.env.cr.execute("CREATE or REPLACE VIEW %s as (%s)" % (self._table, REPORT_QUERY,))
+
+# end

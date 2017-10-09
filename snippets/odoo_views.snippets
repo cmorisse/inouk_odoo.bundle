@@ -1,0 +1,118 @@
+# scope: xml
+
+# Odoo View FORM Complete
+snippet vformc
+	<record id="{{underscored_object_name}}__form_view" model="ir.ui.view">
+		<field name="name">{{underscored_object_name}}.form_view</field>
+		<field name="model">{{dotted_object_name}}</field>
+		<field name="priority" eval="16"/>
+		<field name="arch" type="xml">
+			<form>
+				<header>
+					<field name="stage_id" widget="statusbar" clickable="True"
+						   attrs="{'invisible': [('parent_id', '==', False)]}"/>
+				</header>
+	            <sheet>
+					<div class="oe_button_box" name="button_box">
+						<button type="action" 
+								class="oe_stat_button"
+								name="%(action_account_set_balance_wizard_view)d"
+								string="Set balance"
+								icon="fa-wrench"
+								/>
+					</div>
+					<!--field name="image" widget='image' class="oe_avatar" options='{"preview_image": "image_medium", "size": [90, 90]}'/-->
+					<div class="oe_title">
+						<h1>
+							<field name="name" default_focus="1" placeholder="Name" attrs="{'required' : [('type', '=', 'contact')]}"/>
+						</h1>
+						<div class="o_row">
+						</div>
+					</div>
+					<group>
+						<group>
+							<!-- field name="website" widget="url" placeholder="e.g. www.odoo.com"/-->
+						</group>
+						<group>
+							<!--field name="fax"/-->
+						</group>
+					</group>
+					<notebook colspan="4">
+						<page string="Info" autofocus="autofocus" name="info">
+						</page>
+					</notebook>
+				</sheet>
+			</form>
+		</field>
+	</record>
+
+# condensed form for act window
+snippet actmulti
+	<act_window id="${1}__act_window"
+		name="${2:enter_menu_name}"
+		multi="True"
+		key2="client_action_multi"
+		src_model="${3:source_model}"
+		res_model="${4:target_model}"
+		view_mode="form" 
+		target="new" 
+		view_type="form" />
+
+snippet actwindowview
+	<record id="xy_budget_line__act_window" model="ir.actions.act_window">
+		<field name="name">Budget lines</field>
+		<field name="res_model">xy.banking_transaction_breakdown</field>
+		<field name="view_mode">tree,form</field>
+		<field name="view_type">form</field>
+		<field name="domain">[('is_budget','=', True)]</field>
+		<field name="context">{'default_is_budget':True}</field>
+		<field name="search_view_id" ref="xy_budget_line__search_view"/>
+	</record>
+		<record id="xy_budget_line__act_window_tree_view" model="ir.actions.act_window.view">
+		<field name="sequence" eval="1"/>
+		<field name="view_mode">tree</field>
+		<field name="view_id" ref="xy_budget_line__tree_view"/>
+		<field name="act_window_id" ref="xy_budget_line__act_window"/>
+	</record>
+	<record id="action_invoice_refund_out_tree_form" model="ir.actions.act_window.view">
+		<field  name="sequence" eval="2"/>
+		<field name="view_mode">form</field>
+		<field name="view_id" ref="xy_budget_line__form_view"/>
+		<field name="act_window_id" ref="xy_budget_line__act_window"/>
+	</record>
+
+snippet openfrom
+	<!-- insert in button box and use context to filter view-->
+	<button class="oe_stat_button" 
+		type="action"
+		name="%(${1:act_window of view to open})d"
+		icon="fa-list"
+		string="${2:button label}"
+		context="{'${3:search_default_budget_id}': active_id}"/>
+
+snippet fieldsmulti
+	<group>
+		<field name="some_field" readonly="1"/>
+		<label for="${1:field1}_value" />
+		<div>
+			<field name="${1:field1}_value" nolabel="1" class="oe_inline" />
+			<field name="${1:field1}_unit" style="margin-left: 5px;"  nolabel="1" class="oe_inline"/>
+		</div>
+	</group>
+
+snippet svfilter
+	<separator/>
+	<filter name="filter_${1:filter_name}"
+			string="${2:filter label}"
+			domain="[${3:('field_name', '=', 'value')}]"
+			help="${4:Show only 'New' Documents.}"/>
+
+snippet svgroupby
+	<group string="Group by...">
+		<filter name="group_by_${1:field_name}"
+				string="${2:field label}"
+				context="{'group_by': ['${1:field_name}']}"
+				help="Group ${4:x by y}"/>
+	</group>
+
+# end
